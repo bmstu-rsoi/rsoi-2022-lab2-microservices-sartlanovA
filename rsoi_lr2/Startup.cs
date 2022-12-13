@@ -11,11 +11,11 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-namespace rsoi_lr2
+namespace rsoi_lr2.Controllers
 {
-    public class Startup
+    public class cars
     {
-        public Startup(IConfiguration configuration)
+        public cars(IConfiguration configuration)
         {
             Configuration = configuration;
         }
