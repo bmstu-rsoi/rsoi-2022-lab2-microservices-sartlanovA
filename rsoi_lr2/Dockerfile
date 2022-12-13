@@ -13,7 +13,7 @@ WORKDIR /src
 COPY ["rsoi_lr2.csproj", ""]
 RUN dotnet restore "./rsoi_lr2.csproj"
 COPY . .
-WORKDIR "/src/.rsoi_lr2"
+WORKDIR "rsoi_lr2"
 RUN dotnet build "rsoi_lr2.csproj" -c Release -o /app/build
 
 FROM build AS publish
