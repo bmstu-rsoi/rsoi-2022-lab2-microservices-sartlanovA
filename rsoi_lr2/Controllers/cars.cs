@@ -10,7 +10,7 @@ using Swashbuckle.AspNetCore.Annotations;
 namespace rsoi_lr2.Controllers
 {
     [ApiController]
-    [Route("api/v3/cars")]
+    [Route("api/v1/cars")]
     public class CarsController : ControllerBase
     {
         private readonly CarsContext _carsContext;
@@ -91,19 +91,6 @@ namespace rsoi_lr2.Controllers
                 return Ok();
             }
             return NoContent();
-        }
-
-
-        private static PersonDto Convert(PersonEntity entity)
-        {
-            return new PersonDto()
-            {
-                Id = entity.Id,
-                Address = entity.Address,
-                Age = entity.Age,
-                Job = entity.Job,
-                Name = entity.Name
-            };
         }
     }
 
