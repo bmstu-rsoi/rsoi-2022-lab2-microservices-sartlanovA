@@ -7,6 +7,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Http;
 using Swashbuckle.AspNetCore.Annotations;
 using rsoi_lr2.Dto;
+using rsoi_lr2.Database;
+using Microsoft.EntityFrameworkCore;
 
 namespace rsoi_lr2.Controllers
 {
@@ -15,84 +17,92 @@ namespace rsoi_lr2.Controllers
     public class CarsController : ControllerBase
     {
         private readonly CarsContext _carsContext;
-        private readonly ILogger<cars> _logger;
+        private readonly ILogger<CarsController> _logger;
 
-        public CarsController(_carsContext cr)
-        {
-            this.cr = cr;
-            if (this.cr.cars.Count() == 0)
-            {
-                this.cr.cars.Add(new cars()
-                {
-                    id = 1,
-                    car_uid = "109b42f3-198d-4c89-9276-a7520a7120ab",
-                    brand = "Mercedes Benz",
-                    model = "GLA 250",
-                    registration_number = "ЛО777Х799",
-                    power = 249,
-                    type = "SEDAN",
-                    price = 3500,
-                    available = true
-                });
-                cr.SaveChanges();
-            }
-        }
-    
-    public CarsController(ILogger<cars> logger)
+        public CarsController(CarsContext carsContext, ILogger<CarsController> logger)
         {
             _logger = logger;
             _carsContext = carsContext;
         }
-    }
-        
+
 
         [HttpGet]
         [SwaggerResponse(StatusCodes.Status200OK, type: typeof(CarsDto[]))]
-        public IEnumerable<cars> GetCars()
+        public async Task<IActionResult> Get()
         {
+            var entities = await _carsContext.Cars
+                .AsNoTracking()
+                .ToListAsync();
+
+            var cars = entities.Select(entity => Convert(entity)).ToArray();
             return Ok(cars);
         }
-        [HttpPost]
-        public async Task<IActionResult> Post([FromBody] CarsDto cars)
+        [HttpGet("{carsId:int}")]
+        [SwaggerResponse(StatusCodes.Status200OK, type: typeof(CarsDto))]
+        public async Task<IActionResult> Get(int carsId)
         {
-
-            if (cars.id == 0)
-            {
-                if (cr.Cars.Count() > 0)
-                {
-                    cars.id = Cars.Max(r => r.id) + 1;
-                }
-                else
-                {
-                    cars.id = 1;
-                }
-            }
-            if (cars.car_uid == Guid.Empty)
-            {
-                cars.car_uid = Guid.NewGuid();
-            }
-            car.date_From = car.date_From.ToUniversalTime().AddHours(3);
-            car.date_To = car.date_To.ToUniversalTime().AddHours(3);
-
-            Cars.Add(cars);
-            SaveChanges();
-
-            return Ok(cars);
+            var cars = await _carsContext.Cars
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.Id == carsId);
+            if (cars == null)
+                return NotFound();
+            return Ok(Convert(cars));
         }
+
+         [HttpPost]
+          public async Task<IActionResult> Post([FromBody] CarsDto cars)
+         {
+            var entity = Convert(cars);
+            await _carsContext.Cars.AddAsync(entity);
+            await _carsContext.SaveChangesAsync();
+            return Created($"api/v1/cars/{entity.Id}", null);
+           }
+             
+
 
 
         [HttpDelete("{car_uid}")]
-        public async Task<IActionResult> Delete(int car_uid)
+        public async Task<IActionResult> Delete(Guid car_uid)
         {
-            var car = cr.Cars.FirstOrDefault(car => car.car_uid == car_uid);
-            if (car == !null)
-            {
-                car.Status = "canceled";
-                cr.SaveChanges();
-                return Ok();
-            }
+            var car = _carsContext.Cars.FirstOrDefault(car => car.car_uid == car_uid);
+            if (car == null)
+                return NotFound("Аренда не найдена");
+            _carsContext.Cars.Remove(car);
+            await _carsContext.SaveChangesAsync();
             return NoContent();
+
+        }
+        private static CarsDto Convert(CarsEntity entity)
+        {
+            return new CarsDto()
+            {
+                Id = entity.Id,
+                car_uid = entity.car_uid,
+                brand = entity.brand,
+                model = entity.model,
+                registration_number = entity.registration_number,
+                power = entity.power,
+                price = entity.price,
+                type = entity.type,
+                availability = entity.availability,
+            };
+        }
+
+        private static CarsEntity Convert(CarsDto entity)
+        {
+            return new CarsEntity()
+            {
+                Id = entity.Id,
+                car_uid = entity.car_uid,
+                brand = entity.brand,
+                model = entity.model,
+                registration_number = entity.registration_number,
+                power = entity.power,
+                price = entity.price,
+                type = entity.type,
+                availability = entity.availability,
+            };
         }
     }
+}
 
-   

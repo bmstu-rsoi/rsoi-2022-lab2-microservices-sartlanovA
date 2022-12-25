@@ -7,7 +7,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-namespace rsoi_lr2
+namespace gateway
 {
     public class Program
     {
@@ -20,10 +20,7 @@ namespace rsoi_lr2
             Host.CreateDefaultBuilder(args)
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
-                    webBuilder.UseStartup<IStartup>();
-                    webBuilder.UseUrls("http://*:" + Environment.GetEnvironmentVariable("PORT"));
+                    webBuilder.UseStartup<Startup>();
                 });
-
-
     }
 }

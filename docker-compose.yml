@@ -14,7 +14,54 @@ services:
     ports:
       - "5432:5432"
 
-# TODO добавить сервисы
+  gateway:
+    image: gateway
+    build: ./gateway/
+    ports:
+      - "8080:80"
+    environment:
+      - CARS=cars:80
+      - PAYMENT=payment:80
+      - RENTAL=rental:80
+
+  cars:
+    image: cars
+    build: ./rsoi_lr2/
+    ports:
+      - "8070:80"
+    environment:
+      - DBHOST=postgres
+      - DBPORT=5432
+      - DATABASE=cars
+      - USERNAME=program
+      - PASSWORD=test
+
+  rental:
+    image: rental
+    build: ./rental/
+    ports:
+      - "8060:80"
+    environment:
+      - DBHOST=postgres
+      - DBPORT=5432
+      - DATABASE=rental
+      - USERNAME=program
+      - PASSWORD=test
+
+  payment:
+    image: payment
+    build: ./payment/
+    ports:
+      - "8050:80"
+    environment:
+      - DBHOST=postgres
+      - DBPORT=5432
+      - DATABASE=payments
+      - USERNAME=program
+      - PASSWORD=test
+
+  
+
 
 volumes:
   db-data:
