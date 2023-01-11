@@ -6,6 +6,14 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using System.Reflection;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.OpenApi.Models;
+using rsoi_lr2.Database;
+using rsoi_lr2.Controllers;
 
 namespace rsoi_lr2
 {
@@ -20,7 +28,7 @@ namespace rsoi_lr2
             Host.CreateDefaultBuilder(args)
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
-                    webBuilder.UseStartup<IStartup>();
+                    webBuilder.UseStartup<Startup>();
                     webBuilder.UseUrls("http://*:" + Environment.GetEnvironmentVariable("PORT"));
                 });
 

@@ -10,42 +10,60 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using System.Reflection;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi.Models;
+using rsoi_lr2.Database;
+using System.IO;
 
 namespace rsoi_lr2.Controllers
 {
-    public class cars
-    {
-        public cars(IConfiguration configuration)
+        public class Startup
         {
-            Configuration = configuration;
-        }
-
-        public IConfiguration Configuration { get; }
-
-        // This method gets called by the runtime. Use this method to add services to the container.
-        public void ConfigureServices(IServiceCollection services)
-        {
-            services.AddControllers();
-        }
-
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
-        {
-            if (env.IsDevelopment())
+            public Startup(IConfiguration configuration)
             {
-                app.UseDeveloperExceptionPage();
+                Configuration = configuration;
             }
 
-            app.UseHttpsRedirection();
+            public IConfiguration Configuration { get; }
 
-            app.UseRouting();
+            // This method gets called by the runtime. Use this method to add services to the container.
 
-            app.UseAuthorization();
-
-            app.UseEndpoints(endpoints =>
+            public void ConfigureServices(IServiceCollection services)
             {
-                endpoints.MapControllers();
-            });
+                services.AddControllers();
+
+                services.AddSwaggerGen(c =>
+                {
+                    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Cars.Gateway", Version = "v1" });
+
+                    var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+                    c.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
+                });
+
+                services.AddDbContext<CarsContext>(opt =>
+                opt.UseNpgsql(Configuration.GetConnectionString("DefaultConection")));
+
+            }
+
+            // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
+            public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+            {
+                if (env.IsDevelopment())
+                {
+                    app.UseDeveloperExceptionPage();
+                }
+
+                app.UseSwagger();
+                app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Cars.Gateway v1"));
+                app.UseRouting();
+
+                app.UseAuthorization();
+
+                app.UseEndpoints(endpoints =>
+                {
+                    endpoints.MapControllers();
+                });
+            }
         }
     }
-}
