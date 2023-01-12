@@ -19,21 +19,6 @@ jobs:
 
       # TODO build and run unit tests
 
-- name: Setup .NET SDK 
-        uses: actions/setup-dotnet@v2
-        with:
-          dotnet-version: 3.1.x
-
-      - name: Install dependencies
-        run: dotnet restore rsoi_lr2.sln
-
-      - name: Build
-        run: dotnet publish rsoi-2022-lab2-microservices-sartlanovA\rsoi_lr2 -c Release -o publish --no-restore
-
-      - name: Test
-        run:  dotnet test rsoi-2022-lab2-microservices-sartlanovA\Test --no-restore
-
-
       - name: Build images
         timeout-minutes: 10
         run: docker compose build

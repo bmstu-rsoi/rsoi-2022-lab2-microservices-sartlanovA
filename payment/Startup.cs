@@ -10,8 +10,15 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using System.Reflection;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi.Models;
+using Payments.ModelsDB;
+using Payments.Repositories;
+using Payments.Controllers;
+using Serilog;
 
-namespace payment
+namespace Payments
 {
     public class Startup
     {
@@ -26,6 +33,26 @@ namespace payment
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
+            services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1", new OpenApiInfo { Title = "Payments", Version = "v1" });
+                var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+                var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+                c.IncludeXmlComments(xmlPath);
+
+            });
+            services.AddSwaggerGenNewtonsoftSupport();
+
+            AddDbContext(services, Configuration);
+            AddLogging(services, Configuration);
+
+            services.AddScoped<IPaymentsRepository, PaymentsRepository>();
+            services.AddScoped<PaymentsWebController>();
+
+            // services.AddControllersWithViews()
+            //     .AddNewtonsoftJson(options =>
+            //         options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore
+            //     );
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -35,17 +62,32 @@ namespace payment
             {
                 app.UseDeveloperExceptionPage();
             }
+            app.UseSwagger();
+            app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Payments v1"));
 
-            app.UseHttpsRedirection();
+            //app.UseHttpsRedirection();
 
             app.UseRouting();
 
-            app.UseAuthorization();
+            // app.UseAuthorization();
 
-            app.UseEndpoints(endpoints =>
-            {
-                endpoints.MapControllers();
-            });
+            app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
+        }
+
+        private static void AddDbContext(IServiceCollection services, IConfiguration config)
+        {
+            services.AddDbContext<PaymentContext>(opt =>
+                opt.UseNpgsql(config.GetConnectionString("Local")));
+        }
+
+        private static void AddLogging(IServiceCollection services, IConfiguration config)
+        {
+            var log = new LoggerConfiguration()
+                .WriteTo.File(config["Logger"])
+                .CreateLogger();
+
+            services.AddLogging(loggingBuilder =>
+                loggingBuilder.AddSerilog(logger: log, dispose: true));
         }
     }
 }
